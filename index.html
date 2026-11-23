@@ -373,6 +373,9 @@
   }
   @keyframes bob { 50% { transform: translate(-50%, 6px); } }
 
+  .site-footer { max-width: 720px; margin: 40px auto 0; padding: 20px; border-top: 1px solid var(--line); text-align: center; font-size: 12px; color: var(--muted); }
+  .site-footer code { font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 6px; background: var(--line); }
+
   .toast {
     position: fixed; top: 76px; left: 50%; transform: translate(-50%, -20px);
     padding: 10px 16px; border-radius: 999px; z-index: 70; font-size: 14px; font-weight: 600;
@@ -484,6 +487,8 @@
   <div class="grid" id="cards2"></div>
   <p>Maecenas sed diam eget risus varius blandit sit amet non magna. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam id dolor id nibh ultricies vehicula ut id elit.</p>
 </main>
+
+<footer class="site-footer">UI sample · Version <code id="version">20261123.1126</code></footer>
 
 <div class="dock-count" id="dockCount"></div>
 <nav class="dock-wrap" aria-label="Footer menu">
