@@ -308,12 +308,14 @@
   .dock-item.active svg { stroke: var(--accent); }
   .blob {
     position: absolute; top: 8px; left: 8px; width: 48px; height: 48px; border-radius: 999px; z-index: -1;
+    transform: translateX(calc(var(--i, 0) * (100% + 4px)));
     background: rgba(255,255,255,.35);
     box-shadow: inset 0 1px 1px rgba(255,255,255,.8), 0 4px 12px rgba(0,0,0,.08);
     transition: transform .5s cubic-bezier(.3,1.5,.4,1), width .25s;
   }
   [data-theme="dark"] .blob { background: rgba(255,255,255,.14); }
   .dock.cramped .dock-item { flex: 1 1 0; width: auto; min-width: 0; }
+  .dock.cramped .blob { width: calc((100% - 16px - (var(--n) - 1) * 4px) / var(--n)); }
   /* Scroll states: header slides away, dock shrinks 20% */
   .topbar { transition: transform .5s cubic-bezier(.32,.72,0,1); }
   .dock { transform-origin: bottom center; transition: transform .4s cubic-bezier(.2,.9,.25,1.2); }
@@ -326,6 +328,7 @@
     .dock-wrap { padding: 0 10px; bottom: max(10px, env(safe-area-inset-bottom)); }
     .dock { width: 100%; justify-content: space-between; }
     .dock .dock-item { flex: 1 1 0; width: auto; min-width: 0; }
+    .dock .blob { width: calc((100% - 16px - (var(--n) - 1) * 4px) / var(--n)); }
     .dock-count { bottom: 84px; }
   }
   .dock-count {
@@ -488,7 +491,7 @@
   <p>Maecenas sed diam eget risus varius blandit sit amet non magna. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam id dolor id nibh ultricies vehicula ut id elit.</p>
 </main>
 
-<footer class="site-footer">UI sample · Version <code id="version">20261123.1126</code></footer>
+<footer class="site-footer">UI sample · Version <code id="version">20261123.1130</code></footer>
 
 <div class="dock-count" id="dockCount"></div>
 <nav class="dock-wrap" aria-label="Footer menu">
@@ -558,10 +561,9 @@
     dock.classList.remove('cramped');
     if (dock.scrollWidth > window.innerWidth - 24) dock.classList.add('cramped');
     items.forEach((el, i) => el.classList.toggle('active', i === active));
-    const a = items[active]; if (!a) return;
-    blob.style.width = a.offsetWidth + 'px';
-    blob.style.height = a.offsetHeight + 'px';
-    blob.style.transform = `translateX(${a.offsetLeft - 8}px)`;
+    if (!items[active]) return;
+    dock.style.setProperty('--n', items.length);
+    dock.style.setProperty('--i', active);
     const per = Math.round(items[0].offsetWidth);
     const dc = $('#dockCount');
     dc.textContent = `${items.length} icons · ${per}px each` + (per < 44 ? ' · below 44px tap target' : '');
@@ -645,11 +647,11 @@
 
   // Safari 26+ moved Share behind the ••• menu and added an "Open as Web App" switch
   const safariVer = parseInt((ua.match(/Version\/(\d+)/) || [])[1] || '0', 10);
-  const moreIcon = '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>';
+  const moreIcon = '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h12"/></svg>';
   function installSteps(){
     if (isIOS && safariVer >= 26) return [
       `Open this page in <b>Safari</b>`,
-      `Tap ${moreIcon} next to the address bar, then <b>Share</b>`,
+      `Tap ${moreIcon} in the address bar, then <b>Share</b>`,
       `Scroll down, tap <b>Add to Home Screen</b> ${plusIcon}`,
       `Keep <b>Open as Web App</b> on, then tap <b>Add</b>`
     ];
