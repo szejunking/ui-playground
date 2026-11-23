@@ -29,6 +29,8 @@
     --glass-shadow: rgba(20,20,40,.18);
     --icon: #1a1a1f;
     --dock-icons: 8;
+    --sat: env(safe-area-inset-top, 0px);   /* iOS status bar / notch height */
+    --sab: env(safe-area-inset-bottom, 0px);
     --scale: 1;
     --frost: .15;          /* 0 = crystal clear, 1 = heavy frost (set by menu slider) */
     --dock-rgb: 255,255,255;
@@ -55,7 +57,7 @@
   .topbar {
     position: fixed; inset: 0 0 auto 0; z-index: 40;
     display: flex; justify-content: space-between; align-items: center;
-    padding: max(14px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 14px max(18px, env(safe-area-inset-left));
+    padding: calc(14px + var(--sat)) max(18px, env(safe-area-inset-right)) 14px max(18px, env(safe-area-inset-left));
     background: var(--glass-tint);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
@@ -121,7 +123,7 @@
   }
   .scrim.open { opacity: 1; pointer-events: auto; }
   .menu {
-    position: fixed; top: 12px; left: 12px; bottom: 12px; z-index: 60;
+    position: fixed; top: calc(12px + var(--sat)); left: 12px; bottom: calc(12px + var(--sab)); z-index: 60;
     width: min(300px, calc(100vw - 24px));
     border-radius: 28px; padding: 22px;
     background: var(--glass-tint);
@@ -177,7 +179,7 @@
   .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
 
   /* ---------- Content ---------- */
-  main { max-width: 720px; margin: 0 auto; padding: 86px 20px 0; }
+  main { max-width: 720px; margin: 0 auto; padding: calc(86px + var(--sat)) 20px 0; }
   .hero {
     height: 340px; border-radius: 28px; overflow: hidden; position: relative;
     display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; padding: 16px;
@@ -213,7 +215,7 @@
   /* Full-width hero: bleeds to screen edges and up behind the header */
   html, body { overflow-x: clip; }
   body.hero-full .hero {
-    margin: -86px calc(50% - 50vw) 0;
+    margin: calc(-86px - var(--sat)) calc(50% - 50vw) 0;
     height: min(78vh, 620px); border-radius: 0 0 32px 32px;
     padding: 16px max(20px, calc(50vw - 340px)) 22px;
   }
@@ -380,7 +382,7 @@
   .site-footer code { font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 6px; background: var(--line); }
 
   .toast {
-    position: fixed; top: 76px; left: 50%; transform: translate(-50%, -20px);
+    position: fixed; top: calc(76px + var(--sat)); left: 50%; transform: translate(-50%, -20px);
     padding: 10px 16px; border-radius: 999px; z-index: 70; font-size: 14px; font-weight: 600;
     background: var(--glass-tint); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid var(--glass-edge); box-shadow: 0 8px 24px var(--glass-shadow);
@@ -491,7 +493,7 @@
   <p>Maecenas sed diam eget risus varius blandit sit amet non magna. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam id dolor id nibh ultricies vehicula ut id elit.</p>
 </main>
 
-<footer class="site-footer">UI sample · Version <code id="version">20261123.1130</code></footer>
+<footer class="site-footer">UI sample · Version <code id="version">20261123.1145</code></footer>
 
 <div class="dock-count" id="dockCount"></div>
 <nav class="dock-wrap" aria-label="Footer menu">
