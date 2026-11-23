@@ -29,6 +29,8 @@
     --glass-shadow: rgba(20,20,40,.18);
     --icon: #1a1a1f;
     --dock-icons: 8;
+    --container: 720px;   /* fixed page width; changes per breakpoint below */
+    --pad: 20px;
     --sat: env(safe-area-inset-top, 0px);   /* iOS status bar / notch height */
     --sab: env(safe-area-inset-bottom, 0px);
     --scale: 1;
@@ -179,7 +181,7 @@
   .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
 
   /* ---------- Content ---------- */
-  main { max-width: 720px; margin: 0 auto; padding: calc(86px + var(--sat)) 20px 0; }
+  main { max-width: var(--container); margin: 0 auto; padding: calc(86px + var(--sat)) var(--pad) 0; }
   .hero {
     height: 340px; border-radius: 28px; overflow: hidden; position: relative;
     display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; padding: 16px;
@@ -217,7 +219,7 @@
   body.hero-full .hero {
     margin: calc(-86px - var(--sat)) calc(50% - 50vw) 0;
     height: min(78vh, 620px); border-radius: 0 0 32px 32px;
-    padding: 16px max(20px, calc(50vw - 340px)) 22px;
+    padding: 16px max(var(--pad), calc(50vw - var(--container) / 2 + var(--pad))) 22px;
   }
   h1 { font-size: calc(clamp(32px, 7vw, 48px) * var(--scale)); line-height: 1.05; font-weight: 800; margin: 28px 0 12px; letter-spacing: -.02em; }
   h2 { font-size: calc(24px * var(--scale)); margin: 36px 0 10px; font-weight: 700; }
@@ -225,18 +227,18 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 18px 0; }
   .card { border-radius: 20px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); }
   .card .img { aspect-ratio: 4/3; display: grid; place-items: center; }
-  .card .img svg { width: 38px; height: 38px; stroke: rgba(255,255,255,.9); }
+  .card .img svg { width: 38px; height: 38px; stroke: rgba(255,255,255,.95); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .card div.t { padding: 10px 12px 12px; font-weight: 600; font-size: calc(14px * var(--scale)); }
   .card div.t span { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 2px; font-size: calc(12px * var(--scale)); }
   /* ---------- Carousel ---------- */
   .carousel { position: relative; margin: 18px calc(50% - 50vw) 8px; }
-  @media (min-width: 761px) { .carousel { margin-left: 0; margin-right: 0; } }
+  @media (min-width: 641px) { .carousel { margin-left: 0; margin-right: 0; } }
   .track {
     display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory;
     padding: 6px 20px 14px; scroll-padding: 0 20px; scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
-  @media (min-width: 761px) { .track { padding: 6px 0 14px; scroll-padding: 0; } }
+  @media (min-width: 641px) { .track { padding: 6px 0 14px; scroll-padding: 0; } }
   .track::-webkit-scrollbar { display: none; }
   .slide {
     flex: 0 0 82%; max-width: 420px; scroll-snap-align: start;
@@ -378,7 +380,7 @@
   }
   @keyframes bob { 50% { transform: translate(-50%, 6px); } }
 
-  .site-footer { max-width: 720px; margin: 40px auto 0; padding: 20px; border-top: 1px solid var(--line); text-align: center; font-size: 12px; color: var(--muted); }
+  .site-footer { max-width: var(--container); margin: 40px auto 0; padding: 20px; border-top: 1px solid var(--line); text-align: center; font-size: 12px; color: var(--muted); }
   .site-footer code { font-family: 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 6px; background: var(--line); }
 
   .toast {
@@ -389,6 +391,72 @@
     opacity: 0; transition: all .35s cubic-bezier(.2,.9,.25,1.3); pointer-events: none;
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ================= Responsive: fold covers → phones → foldables/tablets → desktop ================= */
+  /* Header contents line up with the fixed page width on bigger screens */
+  .topbar { padding-left: max(18px, env(safe-area-inset-left), calc(50vw - var(--container) / 2)); padding-right: max(18px, env(safe-area-inset-right), calc(50vw - var(--container) / 2)); }
+  p { max-width: 68ch; }
+
+  /* Foldable cover screens & very small phones (Galaxy Z Fold cover ~344px, small Androids) */
+  @media (max-width: 360px) {
+    :root { --pad: 14px; }
+    .topbar { padding-left: 10px; padding-right: 10px; }
+    .glass-btn, .avatar { width: 40px; height: 40px; }
+    .title { font-size: 14px; padding: 8px 14px; }
+    .hero { height: 280px; border-radius: 22px; }
+    h1 { font-size: calc(28px * var(--scale)); }
+    p { font-size: calc(15.5px * var(--scale)); }
+    .slide { flex-basis: 88%; }
+    .slide .img { height: 150px; }
+    .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .dock-wrap { padding: 0 6px; }
+    .dock-item svg { width: 21px; height: 21px; }
+    .install { left: 8px; right: 8px; padding: 14px; }
+  }
+
+  /* Unfolded foldables & tablets (Galaxy Z Fold open, Pixel Fold, iPad mini/Air portrait) */
+  @media (min-width: 641px) {
+    :root { --container: 760px; --pad: 28px; }
+    main { padding-top: calc(100px + var(--sat)); }
+    body.hero-full .hero { margin-top: calc(-100px - var(--sat)); }
+    .hero { height: 380px; border-radius: 32px; padding: 24px; }
+    .slide { flex: 0 0 calc((100% - 14px) / 2); max-width: none; }
+    .grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  }
+  /* Near-square unfolded screens: keep the hero from eating the whole view */
+  @media (min-width: 600px) and (max-aspect-ratio: 5/4) and (orientation: portrait) {
+    body.hero-full .hero { height: min(60vh, 560px); }
+  }
+
+  /* Desktop & large tablets in landscape */
+  @media (min-width: 1024px) {
+    :root { --container: 1080px; --pad: 32px; }
+    main { padding-top: calc(110px + var(--sat)); }
+    body.hero-full .hero { margin-top: calc(-110px - var(--sat)); height: min(70vh, 640px); }
+    .hero { height: 440px; padding: 32px; }
+    .hero .caption { max-width: 520px; }
+    h1 { font-size: calc(60px * var(--scale)); margin-top: 40px; }
+    h2 { margin-top: 48px; }
+    .slide { flex: 0 0 calc((100% - 28px) / 3); }
+    .slide .img { height: 200px; }
+    .grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .wide-img { height: 280px; }
+    .dock-wrap { bottom: 24px; }
+    .install { left: auto; right: 24px; bottom: 110px; margin: 0; width: 400px; }
+  }
+
+  /* Dual-screen foldables (Surface Duo style, page spanning across a hinge side by side):
+     keep the page on the left screen so nothing sits under the hinge */
+  @media (horizontal-viewport-segments: 2) {
+    :root { --container: env(viewport-segment-width 0 0, 100vw); }
+    main, .site-footer { margin-left: 0; }
+    .topbar { padding-right: calc(100vw - env(viewport-segment-right 0 0, 100vw) + 18px); }
+    .dock-wrap { right: calc(100vw - env(viewport-segment-right 0 0, 100vw)); }
+  }
+  /* Flip phones half-folded (top/bottom screens): keep the dock on the top screen */
+  @media (vertical-viewport-segments: 2) {
+    .dock-wrap { bottom: calc(100vh - env(viewport-segment-bottom 0 0, 100vh) + 12px); }
+  }
 </style>
 </head>
 <body>
@@ -493,7 +561,7 @@
   <p>Maecenas sed diam eget risus varius blandit sit amet non magna. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam id dolor id nibh ultricies vehicula ut id elit.</p>
 </main>
 
-<footer class="site-footer">UI sample · Version <code id="version">20261123.1145</code></footer>
+<footer class="site-footer">UI sample · Version <code id="version">20261123.1250</code></footer>
 
 <div class="dock-count" id="dockCount"></div>
 <nav class="dock-wrap" aria-label="Footer menu">
