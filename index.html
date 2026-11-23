@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- Home-screen / web-app meta (take effect when this page is hosted on its own site) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="UI sample">
+<meta name="theme-color" content="#0e0e12">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236a5cff'/%3E%3Cstop offset='1' stop-color='%23ff6a88'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='180' height='180' rx='40' fill='url(%23g)'/%3E%3Ctext x='90' y='112' font-family='Arial' font-weight='700' font-size='64' fill='white' text-anchor='middle'%3EUI%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236a5cff'/%3E%3Cstop offset='1' stop-color='%23ff6a88'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='180' height='180' rx='40' fill='url(%23g)'/%3E%3Ctext x='90' y='112' font-family='Arial' font-weight='700' font-size='64' fill='white' text-anchor='middle'%3EUI%3C/text%3E%3C/svg%3E">
+<title>UI Playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Nunito:wght@400;700;900&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font: 'Inter', system-ui, sans-serif;
+    --bg: #f4f2ee;
+    --surface: #ffffff;
+    --text: #1a1a1f;
+    --muted: #6b6b76;
+    --line: rgba(0,0,0,.08);
+    --accent: #5b5bf0;
+    --glass-tint: rgba(255,255,255,.22);
+    --glass-edge: rgba(255,255,255,.65);
+    --glass-shadow: rgba(20,20,40,.18);
+    --icon: #1a1a1f;
+    --dock-icons: 8;
+    --scale: 1;
+    --frost: .15;          /* 0 = crystal clear, 1 = heavy frost (set by menu slider) */
+    --dock-rgb: 255,255,255;
+  }
+  [data-theme="dark"] {
+    --bg: #0e0e12;
+    --surface: #18181f;
+    --text: #f0f0f5;
+    --muted: #9a9aa8;
+    --line: rgba(255,255,255,.08);
+    --accent: #8b8bff;
+    --glass-tint: rgba(30,30,40,.28);
+    --glass-edge: rgba(255,255,255,.22);
+    --glass-shadow: rgba(0,0,0,.5);
+    --icon: #f0f0f5;
+    --dock-rgb: 40,40,50;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--font); transition: background .4s, color .4s; }
+  body { min-height: 100vh; padding-bottom: 140px; -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: fixed; inset: 0 0 auto 0; z-index: 40;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: max(14px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 14px max(18px, env(safe-area-inset-left));
+    background: var(--glass-tint);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-bottom: 1px solid var(--glass-edge);
+    border-radius: 0 0 26px 26px;
+    box-shadow: 0 8px 30px var(--glass-shadow);
+  }
+  /* drawer pull tab, visible only when the header is tucked away */
+  .handle {
+    position: absolute; top: 100%; left: 50%;
+    transform: translateX(-50%) translateY(-6px); opacity: 0;
+    width: 64px; height: 22px; border-radius: 0 0 14px 14px;
+    display: grid; place-items: center;
+    background: var(--glass-tint);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--glass-edge); border-top: 0;
+    box-shadow: 0 6px 16px var(--glass-shadow);
+    transition: opacity .3s .15s, transform .4s .1s cubic-bezier(.2,.9,.25,1.3);
+  }
+  /* Transparent header option */
+  body.header-clear .topbar {
+    background: transparent; border-bottom-color: transparent; box-shadow: none;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  .handle::before { content: ""; width: 28px; height: 4px; border-radius: 4px; background: var(--muted); opacity: .7; }
+  .glass-btn {
+    width: 46px; height: 46px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--glass-tint);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--glass-edge);
+    box-shadow: 0 6px 20px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.5);
+    transition: transform .2s;
+  }
+  .glass-btn:active { transform: scale(.92); }
+  .glass-btn svg { width: 22px; height: 22px; stroke: var(--icon); }
+  .title {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    padding: 10px 20px; border-radius: 999px;
+    font-weight: 700; font-size: 16px; letter-spacing: -.01em; white-space: nowrap;
+    background: var(--glass-tint);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--glass-edge);
+    box-shadow: 0 6px 20px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  .avatar {
+    width: 46px; height: 46px; border-radius: 50%; padding: 3px;
+    background: conic-gradient(from 200deg, #ff6b9d, #ffb36b, #6bffb8, #6bb8ff, #b36bff, #ff6b9d);
+    box-shadow: 0 6px 20px var(--glass-shadow);
+  }
+  .avatar span {
+    display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%;
+    background: var(--surface); font-weight: 800; font-size: 15px;
+  }
+
+  /* ---------- Side menu ---------- */
+  .scrim {
+    position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.25);
+    opacity: 0; pointer-events: none; transition: opacity .3s;
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .menu {
+    position: fixed; top: 12px; left: 12px; bottom: 12px; z-index: 60;
+    width: min(300px, calc(100vw - 24px));
+    border-radius: 28px; padding: 22px;
+    background: var(--glass-tint);
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    border: 1px solid var(--glass-edge);
+    box-shadow: 0 20px 60px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.4);
+    transform: translateX(calc(-100% - 24px)) scale(.96);
+    transform-origin: top left;
+    transition: transform .45s cubic-bezier(.2,.9,.25,1.1);
+    overflow-y: auto;
+  }
+  .menu.open { transform: none; }
+  .menu h3 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 22px 0 10px; }
+  .menu h3:first-of-type { margin-top: 6px; }
+  .menu-head { display: flex; justify-content: space-between; align-items: center; }
+  .menu-head strong { font-size: 20px; }
+  .close { width: 34px; height: 34px; border-radius: 50%; background: var(--line); display: grid; place-items: center; font-size: 18px; }
+
+  .font-list { display: grid; gap: 6px; }
+  .font-opt {
+    text-align: left; padding: 12px 14px; border-radius: 14px;
+    background: var(--line); border: 1.5px solid transparent; font-size: 16px;
+    transition: border-color .2s, background .2s;
+  }
+  .font-opt.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); }
+
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--line); border-radius: 14px; padding: 4px; position: relative; }
+  .seg button { padding: 10px; border-radius: 10px; z-index: 1; font-weight: 600; display: flex; gap: 6px; justify-content: center; align-items: center; }
+  .seg .pill {
+    position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px);
+    background: var(--surface); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    transition: transform .35s cubic-bezier(.2,.9,.25,1.2);
+  }
+  [data-theme="dark"] .seg .pill { transform: translateX(100%); }
+
+  .size-row { display: flex; align-items: center; gap: 8px; background: var(--line); border-radius: 14px; padding: 4px; }
+  .size-row button { width: 48px; height: 40px; border-radius: 10px; font-weight: 800; background: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,.1); transition: transform .15s; }
+  .size-row button:active { transform: scale(.9); }
+  .size-row button:disabled { opacity: .35; }
+  .size-row button.sm { font-size: 13px; } .size-row button.lg { font-size: 19px; }
+  .size-row output { flex: 1; text-align: center; font-weight: 700; cursor: pointer; }
+  .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--line); font-weight: 600; cursor: pointer; }
+  .switch { position: relative; width: 50px; height: 30px; flex: none; }
+  .switch input { position: absolute; opacity: 0; inset: 0; }
+  .switch .track { position: absolute; inset: 0; border-radius: 999px; background: rgba(120,120,128,.32); transition: background .25s; }
+  .switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); transition: transform .3s cubic-bezier(.2,.9,.25,1.3); }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track::after { transform: translateX(20px); }
+  .slider-row { display: flex; align-items: center; gap: 12px; }
+  .slider-row input { flex: 1; accent-color: var(--accent); }
+  .slider-row output { font-weight: 800; min-width: 24px; text-align: right; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+  /* ---------- Content ---------- */
+  main { max-width: 720px; margin: 0 auto; padding: 86px 20px 0; }
+  .hero {
+    height: 340px; border-radius: 28px; overflow: hidden; position: relative;
+    display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; padding: 16px;
+    transition: height .5s cubic-bezier(.32,.72,0,1), margin .5s cubic-bezier(.32,.72,0,1), border-radius .5s, padding .5s;
+    background:
+      radial-gradient(circle at 20% 30%, #ff7eb3 0, transparent 45%),
+      radial-gradient(circle at 80% 20%, #7afcff 0, transparent 40%),
+      radial-gradient(circle at 60% 80%, #feff9c 0, transparent 45%),
+      radial-gradient(circle at 10% 90%, #9b7bff 0, transparent 40%),
+      linear-gradient(135deg, #6a5cff, #ff6a88);
+    background-size: 160% 160%;
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  @keyframes drift { to { background-position: 100% 100%; } }
+  .hero .caption {
+    padding: 14px 16px; border-radius: 18px; color: #fff;
+    background: rgba(255,255,255,.15);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,.35);
+  }
+  .hero .caption small { opacity: .85; }
+  .cta {
+    align-self: stretch; padding: 15px 22px; border-radius: 999px;
+    background: #fff; color: #1a1a1f; font-weight: 700; font-size: 16px;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .cta:active { transform: scale(.96); }
+  .cta svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s; }
+  .cta:hover svg { transform: translateX(3px); }
+  @media (min-width: 641px) { .cta { align-self: flex-start; } }
+  /* Full-width hero: bleeds to screen edges and up behind the header */
+  html, body { overflow-x: clip; }
+  body.hero-full .hero {
+    margin: -86px calc(50% - 50vw) 0;
+    height: min(78vh, 620px); border-radius: 0 0 32px 32px;
+    padding: 16px max(20px, calc(50vw - 340px)) 22px;
+  }
+  h1 { font-size: calc(clamp(32px, 7vw, 48px) * var(--scale)); line-height: 1.05; font-weight: 800; margin: 28px 0 12px; letter-spacing: -.02em; }
+  h2 { font-size: calc(24px * var(--scale)); margin: 36px 0 10px; font-weight: 700; }
+  p { line-height: 1.7; color: var(--muted); margin-bottom: 14px; font-size: calc(16.5px * var(--scale)); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 18px 0; }
+  .card { border-radius: 20px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); }
+  .card .img { aspect-ratio: 4/3; display: grid; place-items: center; }
+  .card .img svg { width: 38px; height: 38px; stroke: rgba(255,255,255,.9); }
+  .card div.t { padding: 10px 12px 12px; font-weight: 600; font-size: calc(14px * var(--scale)); }
+  .card div.t span { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 2px; font-size: calc(12px * var(--scale)); }
+  /* ---------- Carousel ---------- */
+  .carousel { position: relative; margin: 18px calc(50% - 50vw) 8px; }
+  @media (min-width: 761px) { .carousel { margin-left: 0; margin-right: 0; } }
+  .track {
+    display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory;
+    padding: 6px 20px 14px; scroll-padding: 0 20px; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  @media (min-width: 761px) { .track { padding: 6px 0 14px; scroll-padding: 0; } }
+  .track::-webkit-scrollbar { display: none; }
+  .slide {
+    flex: 0 0 82%; max-width: 420px; scroll-snap-align: start;
+    border-radius: 24px; overflow: hidden; background: var(--surface);
+    border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,.06);
+    transition: transform .3s;
+  }
+  .slide:active { transform: scale(.98); }
+  .slide .img { height: 180px; position: relative; display: flex; align-items: flex-end; padding: 12px; }
+  .slide .tag {
+    padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff;
+    background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.4);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .slide .body { padding: 14px 16px 16px; }
+  .slide .body b { display: block; font-size: calc(17px * var(--scale)); margin-bottom: 4px; }
+  .slide .body span { color: var(--muted); font-size: calc(14px * var(--scale)); line-height: 1.5; }
+  .car-foot { display: flex; justify-content: center; align-items: center; gap: 14px; }
+  .dots { display: flex; gap: 6px; }
+  .dots button { width: 7px; height: 7px; border-radius: 999px; background: var(--muted); opacity: .35; transition: width .35s cubic-bezier(.2,.9,.25,1.2), opacity .3s, background .3s; }
+  .dots button.on { width: 22px; opacity: 1; background: var(--accent); }
+  .arrow { width: 34px; height: 34px; border-radius: 50%; display: none; place-items: center; background: var(--line); }
+  .arrow svg { width: 16px; height: 16px; stroke: var(--text); fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  @media (hover: hover) { .arrow { display: grid; } }
+
+  .wide-img {
+    height: 200px; border-radius: 24px; margin: 20px 0;
+    background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,.12) 0 14px, transparent 14px 28px),
+      linear-gradient(120deg, #11998e, #38ef7d, #f9d423);
+  }
+
+  /* ---------- Liquid Glass dock ---------- */
+  .dock-wrap {
+    position: fixed; left: 0; right: 0; bottom: 18px; z-index: 30;
+    display: flex; justify-content: center; padding: 0 12px; pointer-events: none;
+  }
+  .dock {
+    pointer-events: auto; position: relative;
+    display: flex; gap: 4px; padding: 8px;
+    border-radius: 999px; max-width: 100%;
+    background: rgba(var(--dock-rgb), calc(var(--frost) * .55));
+    backdrop-filter: blur(calc(var(--frost) * 20px)) saturate(160%);
+    -webkit-backdrop-filter: blur(calc(var(--frost) * 20px)) saturate(160%);
+    box-shadow:
+      0 12px 40px var(--glass-shadow),
+      inset 0 1px 1px rgba(255,255,255,.75),
+      inset 0 -1px 1px rgba(255,255,255,.25),
+      inset 0 0 14px rgba(255,255,255,.08);
+    isolation: isolate;
+  }
+  /* refraction rim + specular sheen */
+  .dock::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.2px; z-index: -1;
+    background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(255,255,255,.1) 35%, rgba(255,255,255,.05) 65%, rgba(255,255,255,.7));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .dock::after {
+    content: ""; position: absolute; left: 10%; right: 10%; top: 2px; height: 45%; border-radius: 999px;
+    background: linear-gradient(to bottom, rgba(255,255,255,.18), transparent);
+    pointer-events: none; z-index: -1;
+  }
+  .dock-item {
+    position: relative; width: 48px; height: 48px; flex: 0 0 48px;
+    display: grid; place-items: center; border-radius: 50%;
+    transition: transform .25s cubic-bezier(.2,.9,.25,1.4);
+  }
+  .dock-item svg { width: 24px; height: 24px; stroke: var(--icon); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; transition: stroke .2s; }
+  .dock-item:active { transform: scale(.85); }
+  .dock-item.active svg { stroke: var(--accent); }
+  .blob {
+    position: absolute; top: 8px; left: 8px; width: 48px; height: 48px; border-radius: 999px; z-index: -1;
+    background: rgba(255,255,255,.35);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,.8), 0 4px 12px rgba(0,0,0,.08);
+    transition: transform .5s cubic-bezier(.3,1.5,.4,1), width .25s;
+  }
+  [data-theme="dark"] .blob { background: rgba(255,255,255,.14); }
+  .dock.cramped .dock-item { flex: 1 1 0; width: auto; min-width: 0; }
+  /* Scroll states: header slides away, dock shrinks 20% */
+  .topbar { transition: transform .5s cubic-bezier(.32,.72,0,1); }
+  .dock { transform-origin: bottom center; transition: transform .4s cubic-bezier(.2,.9,.25,1.2); }
+  body.scrolled .topbar { transform: translateY(-100%); }
+  body.scrolled .topbar > *:not(.handle) { pointer-events: none; }
+  body.scrolled .handle { opacity: 1; transform: translateX(-50%) translateY(0); }
+  body.scrolled .dock { transform: scale(.8); }
+  /* Mobile: stretch the dock across the full screen width */
+  @media (max-width: 640px) {
+    .dock-wrap { padding: 0 10px; bottom: max(10px, env(safe-area-inset-bottom)); }
+    .dock { width: 100%; justify-content: space-between; }
+    .dock .dock-item { flex: 1 1 0; width: auto; min-width: 0; }
+    .dock-count { bottom: 84px; }
+  }
+  .dock-count {
+    position: fixed; bottom: 92px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; padding: 4px 10px; border-radius: 999px; z-index: 31;
+    background: var(--glass-tint); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-edge); color: var(--muted);
+    opacity: 0; transition: opacity .3s;
+  }
+  .dock-count.show { opacity: 1; }
+
+  /* ---------- Install hint sheet ---------- */
+  .install {
+    position: fixed; left: 12px; right: 12px; bottom: 96px; z-index: 65;
+    max-width: 420px; margin: 0 auto; padding: 18px;
+    border-radius: 26px;
+    background: var(--glass-tint);
+    backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%);
+    border: 1px solid var(--glass-edge);
+    box-shadow: 0 20px 60px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.4);
+    transform: translateY(30px) scale(.96); opacity: 0; pointer-events: none;
+    transition: transform .5s cubic-bezier(.2,.9,.25,1.2), opacity .3s;
+  }
+  [data-theme="light"] .install { background: rgba(255,255,255,.72); }
+  [data-theme="dark"] .install { background: rgba(28,28,36,.75); }
+  .install.show { transform: none; opacity: 1; pointer-events: auto; }
+  .install .top { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+  .install .app-icon { width: 54px; height: 54px; border-radius: 14px; flex: none; box-shadow: 0 6px 16px rgba(0,0,0,.2); }
+  .install .top b { display: block; font-size: 17px; }
+  .install .top span { font-size: 13px; color: var(--muted); }
+  .install .x { margin-left: auto; align-self: flex-start; width: 30px; height: 30px; border-radius: 50%; background: var(--line); font-size: 14px; flex: none; }
+  .install ol { list-style: none; display: grid; gap: 10px; margin-bottom: 14px; }
+  .install li { display: flex; align-items: center; gap: 12px; font-size: 15px; }
+  .install li i {
+    width: 28px; height: 28px; border-radius: 8px; flex: none; display: grid; place-items: center;
+    font-style: normal; font-weight: 800; font-size: 13px; background: var(--line);
+  }
+  .install li svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; margin: 0 2px; }
+  .install .row { display: flex; gap: 8px; }
+  .install .row button { flex: 1; padding: 12px; border-radius: 999px; font-weight: 700; font-size: 14px; background: var(--line); }
+  .install .row button.primary { background: var(--accent); color: #fff; }
+  .install .arrow-down {
+    position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%);
+    font-size: 26px; animation: bob 1.2s ease-in-out infinite; display: none;
+  }
+  @keyframes bob { 50% { transform: translate(-50%, 6px); } }
+
+  .toast {
+    position: fixed; top: 76px; left: 50%; transform: translate(-50%, -20px);
+    padding: 10px 16px; border-radius: 999px; z-index: 70; font-size: 14px; font-weight: 600;
+    background: var(--glass-tint); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-edge); box-shadow: 0 8px 24px var(--glass-shadow);
+    opacity: 0; transition: all .35s cubic-bezier(.2,.9,.25,1.3); pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="glass-btn" id="menuBtn" aria-label="Open menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h10M4 17h16"/></svg>
+  </button>
+  <div class="title">UI sample</div>
+  <button class="avatar" aria-label="Account" id="userBtn"><span>JD</span></button>
+  <button class="handle" id="handle" aria-label="Show header"></button>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<aside class="menu" id="menu" aria-label="Settings menu">
+  <div class="menu-head"><strong>Settings</strong><button class="close" id="closeBtn" aria-label="Close">✕</button></div>
+
+  <h3>Appearance</h3>
+  <div class="seg">
+    <div class="pill"></div>
+    <button data-theme-set="light">☀️ Light</button>
+    <button data-theme-set="dark">🌙 Dark</button>
+  </div>
+
+  <h3>Header</h3>
+  <label class="toggle-row">Transparent header
+    <span class="switch"><input type="checkbox" id="clearToggle"><span class="track"></span></span>
+  </label>
+
+  <h3>Hero</h3>
+  <label class="toggle-row">Full-width hero
+    <span class="switch"><input type="checkbox" id="heroToggle"><span class="track"></span></span>
+  </label>
+  <p class="hint">Stretches the hero edge to edge and up behind the header. Looks best with a transparent header.</p>
+
+  <h3>Install</h3>
+  <button class="toggle-row" id="showInstall" style="width:100%">Show "Add to Home Screen" hint <span>›</span></button>
+
+  <h3>Font</h3>
+  <div class="font-list" id="fontList">
+    <button class="font-opt active" data-font="'Inter', system-ui, sans-serif" style="font-family:'Inter'">Inter — clean</button>
+    <button class="font-opt" data-font="'Playfair Display', Georgia, serif" style="font-family:'Playfair Display'">Playfair — editorial</button>
+    <button class="font-opt" data-font="'Nunito', system-ui, sans-serif" style="font-family:'Nunito'">Nunito — rounded</button>
+    <button class="font-opt" data-font="'Space Grotesk', system-ui, sans-serif" style="font-family:'Space Grotesk'">Space Grotesk — techy</button>
+    <button class="font-opt" data-font="'JetBrains Mono', monospace" style="font-family:'JetBrains Mono'">JetBrains — mono</button>
+  </div>
+
+  <h3>Text size</h3>
+  <div class="size-row">
+    <button class="sm" id="sizeDown" aria-label="Decrease text size">A−</button>
+    <output id="sizeOut" title="Tap to reset">100%</output>
+    <button class="lg" id="sizeUp" aria-label="Increase text size">A+</button>
+  </div>
+  <p class="hint">Tap the percentage to reset.</p>
+
+  <h3>Dock test</h3>
+  <div class="slider-row">
+    <input type="range" id="iconCount" min="3" max="12" value="8">
+    <output id="iconOut">8</output>
+  </div>
+  <p class="hint">Slide to add or remove dock icons and see where it starts to feel crammed on your screen.</p>
+
+  <h3>Dock glass</h3>
+  <div class="slider-row">
+    <span style="font-size:12px;color:var(--muted)">Clear</span>
+    <input type="range" id="frost" min="0" max="100" value="15">
+    <span style="font-size:12px;color:var(--muted)">Frosted</span>
+  </div>
+</aside>
+
+<main>
+  <div class="hero">
+    <div class="caption"><strong>Placeholder hero image</strong><br><small>Animated gradient — scroll so it passes under the glass dock.</small></div>
+    <button class="cta" id="cta">Get started <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </div>
+
+  <h1>A playground for interface ideas.</h1>
+  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis dapibus. Vestibulum id ligula porta felis euismod semper. Cras mattis consectetur purus sit amet fermentum.</p>
+  <p>Donec ullamcorper nulla non metus auctor fringilla. Maecenas faucibus mollis interdum. Nullam quis risus eget urna mollis ornare vel eu leo. Aenean lacinia bibendum nulla sed consectetur.</p>
+
+  <h2>Carousel</h2>
+  <div class="carousel">
+    <div class="track" id="track"></div>
+    <div class="car-foot">
+      <button class="arrow" id="prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="dots" id="dots"></div>
+      <button class="arrow" id="next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+
+  <h2>Featured items</h2>
+  <div class="grid" id="cards"></div>
+
+  <h2>Section heading</h2>
+  <p>Curabitur blandit tempus porttitor. Etiam porta sem malesuada magna mollis euismod. Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Praesent commodo cursus magna, vel scelerisque nisl consectetur et.</p>
+  <div class="wide-img"></div>
+  <p>Sed posuere consectetur est at lobortis. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh.</p>
+  <p>Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Nulla vitae elit libero, a pharetra augue. Donec sed odio dui. Etiam porta sem malesuada magna mollis euismod.</p>
+
+  <h2>More placeholder content</h2>
+  <div class="grid" id="cards2"></div>
+  <p>Maecenas sed diam eget risus varius blandit sit amet non magna. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam id dolor id nibh ultricies vehicula ut id elit.</p>
+</main>
+
+<div class="dock-count" id="dockCount"></div>
+<nav class="dock-wrap" aria-label="Footer menu">
+  <div class="dock" id="dock"><div class="blob" id="blob"></div></div>
+</nav>
+
+<div class="install" id="install" role="dialog" aria-label="Add to Home Screen">
+  <div class="top">
+    <img class="app-icon" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236a5cff'/%3E%3Cstop offset='1' stop-color='%23ff6a88'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='180' height='180' rx='40' fill='url(%23g)'/%3E%3Ctext x='90' y='112' font-family='Arial' font-weight='700' font-size='64' fill='white' text-anchor='middle'%3EUI%3C/text%3E%3C/svg%3E">
+    <div><b>Add UI sample to your Home Screen</b><span>Opens full screen, like an app.</span></div>
+    <button class="x" id="installX" aria-label="Close">✕</button>
+  </div>
+  <ol id="installSteps"></ol>
+  <div class="row">
+    <button id="installNever">Don't show again</button>
+    <button class="primary" id="installOk">Got it</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = s => document.querySelector(s);
+  const root = document.documentElement;
+  const store = {
+    get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+    set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  };
+
+  // ---- Icons ----
+  const icons = {
+    home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+    heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+    plus: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+    chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+    bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+    cart: '<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.5 11h11L21 8H6.5"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+    camera: '<rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M8 7l2-3h4l2 3"/>',
+    map: '<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
+    music: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
+    star: '<path d="M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.3L12 17.5 6.5 20.4l1-6.3L3 9.7l6.2-.9z"/>'
+  };
+  const iconKeys = Object.keys(icons);
+  const svg = k => `<svg viewBox="0 0 24 24">${icons[k]}</svg>`;
+
+  // ---- Dock ----
+  const dock = $('#dock'), blob = $('#blob');
+  let active = 0;
+  function buildDock(n){
+    dock.querySelectorAll('.dock-item').forEach(e => e.remove());
+    for (let i = 0; i < n; i++){
+      const b = document.createElement('button');
+      b.className = 'dock-item' + (i === active ? ' active' : '');
+      b.setAttribute('aria-label', iconKeys[i]);
+      b.innerHTML = svg(iconKeys[i]);
+      b.onclick = () => { active = i; update(); toast(iconKeys[i]); };
+      dock.appendChild(b);
+    }
+    if (active >= n) active = 0;
+    requestAnimationFrame(update);
+  }
+  function update(){
+    const items = [...dock.querySelectorAll('.dock-item')];
+    // Shrink icons to fit when the screen runs out of room
+    dock.classList.remove('cramped');
+    if (dock.scrollWidth > window.innerWidth - 24) dock.classList.add('cramped');
+    items.forEach((el, i) => el.classList.toggle('active', i === active));
+    const a = items[active]; if (!a) return;
+    blob.style.width = a.offsetWidth + 'px';
+    blob.style.height = a.offsetHeight + 'px';
+    blob.style.transform = `translateX(${a.offsetLeft - 8}px)`;
+    const per = Math.round(items[0].offsetWidth);
+    const dc = $('#dockCount');
+    dc.textContent = `${items.length} icons · ${per}px each` + (per < 44 ? ' · below 44px tap target' : '');
+  }
+  window.addEventListener('resize', update);
+
+  const slider = $('#iconCount'), out = $('#iconOut');
+  let countTimer;
+  slider.oninput = () => {
+    out.value = slider.value; buildDock(+slider.value);
+    const dc = $('#dockCount'); dc.classList.add('show');
+    clearTimeout(countTimer); countTimer = setTimeout(() => dc.classList.remove('show'), 1800);
+  };
+
+  // ---- Menu ----
+  const menu = $('#menu'), scrim = $('#scrim');
+  const openMenu = o => { menu.classList.toggle('open', o); scrim.classList.toggle('open', o); };
+  $('#menuBtn').onclick = () => openMenu(true);
+  $('#closeBtn').onclick = scrim.onclick = () => openMenu(false);
+  document.addEventListener('keydown', e => e.key === 'Escape' && openMenu(false));
+
+  // ---- Theme ----
+  function setTheme(t){ root.dataset.theme = t; store.set('pg-theme', t); }
+  document.querySelectorAll('[data-theme-set]').forEach(b => b.onclick = () => setTheme(b.dataset.themeSet));
+  setTheme(store.get('pg-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+  // ---- Fonts ----
+  function setFont(f){
+    root.style.setProperty('--font', f); store.set('pg-font', f);
+    document.querySelectorAll('.font-opt').forEach(b => b.classList.toggle('active', b.dataset.font === f));
+  }
+  document.querySelectorAll('.font-opt').forEach(b => b.onclick = () => setFont(b.dataset.font));
+  const savedFont = store.get('pg-font'); if (savedFont) setFont(savedFont);
+
+  // ---- Text size ----
+  const SIZES = [0.8, 0.9, 1, 1.1, 1.25, 1.4, 1.6];
+  let sizeIdx = SIZES.indexOf(parseFloat(store.get('pg-scale'))); if (sizeIdx < 0) sizeIdx = 2;
+  function setSize(i){
+    sizeIdx = Math.max(0, Math.min(SIZES.length - 1, i));
+    root.style.setProperty('--scale', SIZES[sizeIdx]);
+    $('#sizeOut').value = Math.round(SIZES[sizeIdx] * 100) + '%';
+    $('#sizeDown').disabled = sizeIdx === 0;
+    $('#sizeUp').disabled = sizeIdx === SIZES.length - 1;
+    store.set('pg-scale', SIZES[sizeIdx]);
+  }
+  $('#sizeDown').onclick = () => setSize(sizeIdx - 1);
+  $('#sizeUp').onclick = () => setSize(sizeIdx + 1);
+  $('#sizeOut').onclick = () => setSize(2);
+  setSize(sizeIdx);
+
+  // ---- Transparent header ----
+  const clearToggle = $('#clearToggle');
+  function setClear(on){ document.body.classList.toggle('header-clear', on); clearToggle.checked = on; store.set('pg-clear', on ? '1' : '0'); }
+  clearToggle.onchange = () => setClear(clearToggle.checked);
+  setClear(store.get('pg-clear') === '1');
+
+  // ---- Dock glass ----
+  const frost = $('#frost');
+  function setFrost(v){ root.style.setProperty('--frost', v / 100); frost.value = v; store.set('pg-frost', v); }
+  frost.oninput = () => setFrost(+frost.value);
+  setFrost(store.get('pg-frost') ?? 15);
+
+  // ---- Full-width hero ----
+  const heroToggle = $('#heroToggle');
+  function setHero(on){ document.body.classList.toggle('hero-full', on); heroToggle.checked = on; store.set('pg-hero', on ? '1' : '0'); }
+  heroToggle.onchange = () => setHero(heroToggle.checked);
+  setHero(store.get('pg-hero') === '1');
+  $('#cta').onclick = () => toast('Call to action tapped');
+
+  // ---- Add to Home Screen hint ----
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(ua);
+  const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isMac = /Mac/.test(navigator.platform);
+  const shareIcon = '<svg viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg>';
+  const plusIcon = '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+  const dotsIcon = '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>';
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
+
+  function installSteps(){
+    if (isIOS) return [
+      `Open this page in <b>Safari</b>`,
+      `Tap the Share button ${shareIcon}`,
+      `Choose <b>Add to Home Screen</b> ${plusIcon}`
+    ];
+    if (isAndroid) return [
+      `Open this page in <b>Chrome</b>`,
+      `Tap the menu ${dotsIcon} at the top right`,
+      `Choose <b>Add to Home screen</b> or <b>Install app</b>`
+    ];
+    return [
+      `Press <b>${isMac ? '⌘' : 'Ctrl'} + D</b> to bookmark this page`,
+      `In Chrome or Edge, use the <b>Install</b> icon in the address bar to open it as an app`
+    ];
+  }
+  const sheet = $('#install');
+  function showInstall(){
+    $('#installSteps').innerHTML = installSteps().map((t, i) => `<li><i>${i + 1}</i><span>${t}</span></li>`).join('');
+    $('#installOk').textContent = deferredPrompt ? 'Install' : 'Got it';
+    openMenu(false);
+    sheet.classList.add('show');
+  }
+  const hideInstall = () => sheet.classList.remove('show');
+  $('#installX').onclick = hideInstall;
+  $('#installOk').onclick = async () => {
+    if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice.catch(() => {}); deferredPrompt = null; }
+    store.set('pg-install-seen', '1'); hideInstall();
+  };
+  $('#installNever').onclick = () => { store.set('pg-install-never', '1'); hideInstall(); };
+  $('#showInstall').onclick = showInstall;
+  // Auto-show once, a few seconds in, unless already installed or dismissed for good
+  if (!isStandalone && store.get('pg-install-never') !== '1' && store.get('pg-install-seen') !== '1') {
+    setTimeout(showInstall, 3000);
+  }
+
+  // ---- User ----
+  $('#userBtn').onclick = () => toast('Signed in as Jane Doe');
+
+  // ---- Toast ----
+  let tt;
+  function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 1400); }
+
+  // ---- Placeholder cards ----
+  const grads = [['#ff9a9e','#fad0c4'],['#a18cd1','#fbc2eb'],['#84fab0','#8fd3f4'],['#f6d365','#fda085'],['#30cfd0','#330867'],['#5ee7df','#b490ca']];
+  function cards(el, offset){
+    el.innerHTML = grads.slice(0, 4).map((g, i) => {
+      const k = iconKeys[(i + offset) % iconKeys.length];
+      const gg = grads[(i + offset) % grads.length];
+      return `<div class="card"><div class="img" style="background:linear-gradient(135deg,${gg[0]},${gg[1]})">${svg(k)}</div><div class="t">Item title ${i + 1 + offset}<span>Short placeholder caption</span></div></div>`;
+    }).join('');
+  }
+  cards($('#cards'), 0); cards($('#cards2'), 4);
+
+  // ---- Carousel ----
+  const slides = [
+    ['New', 'Slide title one', 'A short placeholder description for this card.', ['#ff9a9e','#a18cd1']],
+    ['Popular', 'Slide title two', 'Swipe sideways to see the next card snap in.', ['#43e97b','#38f9d7']],
+    ['Trending', 'Slide title three', 'Dots below follow along as you swipe.', ['#f6d365','#fd7043']],
+    ['Featured', 'Slide title four', 'Auto-advances every few seconds until you touch it.', ['#4facfe','#6a5cff']],
+    ['Limited', 'Slide title five', 'Tap any card to see the tap feedback.', ['#fa709a','#fee140']],
+  ];
+  const track = $('#track'), dots = $('#dots');
+  track.innerHTML = slides.map(([tag, t, d, g], i) =>
+    `<article class="slide"><div class="img" style="background:linear-gradient(135deg,${g[0]},${g[1]})"><span class="tag">${tag}</span></div><div class="body"><b>${t}</b><span>${d}</span></div></article>`).join('');
+  dots.innerHTML = slides.map((_, i) => `<button aria-label="Go to slide ${i+1}"></button>`).join('');
+  const slideEls = [...track.children], dotEls = [...dots.children];
+  let cur = 0;
+  const goTo = i => { cur = (i + slides.length) % slides.length; track.scrollTo({ left: slideEls[cur].offsetLeft - slideEls[0].offsetLeft, behavior: 'smooth' }); };
+  dotEls.forEach((d, i) => d.onclick = () => { goTo(i); pause(); });
+  $('#prev').onclick = () => { goTo(cur - 1); pause(); };
+  $('#next').onclick = () => { goTo(cur + 1); pause(); };
+  slideEls.forEach((el, i) => el.onclick = () => toast(slides[i][1]));
+  function markDot(){
+    const x = track.scrollLeft, w = slideEls[1].offsetLeft - slideEls[0].offsetLeft;
+    let i = Math.round(x / w);
+    if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 4) i = slides.length - 1;
+    cur = i; dotEls.forEach((d, j) => d.classList.toggle('on', j === i));
+  }
+  track.addEventListener('scroll', () => requestAnimationFrame(markDot), { passive: true });
+  markDot();
+  // autoplay, pauses for 8s after any interaction
+  let auto = setInterval(() => goTo(cur + 1), 4000), resume;
+  function pause(){ clearInterval(auto); clearTimeout(resume); resume = setTimeout(() => { auto = setInterval(() => goTo(cur + 1), 4000); }, 8000); }
+  track.addEventListener('pointerdown', pause); track.addEventListener('touchstart', pause, { passive: true });
+
+  // ---- Scroll: hide header + shrink dock on scroll down, restore on scroll up ----
+  let lastY = window.scrollY, ticking = false;
+  window.addEventListener('scroll', () => {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(() => {
+      const y = window.scrollY, dy = y - lastY;
+      if (y < 40) document.body.classList.remove('scrolled');
+      else if (dy > 6) document.body.classList.add('scrolled');
+      else if (dy < -6) document.body.classList.remove('scrolled');
+      if (Math.abs(dy) > 6 || y < 40) lastY = y;
+      ticking = false;
+    });
+  }, { passive: true });
+
+  $('#handle').onclick = () => document.body.classList.remove('scrolled');
+
+  buildDock(8);
+</script>
+</body>
+</html>
